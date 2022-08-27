@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        DOCKER_CREDS = credentials('docker-credentials')
+        }
         stages {
             stage('Build') {
                 agent {
@@ -45,6 +48,26 @@ pipeline {
                     sh 'docker --version'
                     sh 'docker-compose --version'
                     sh 'docker-compose build'
+                }
+            }
+            stage('Publish Image') {
+                steps {
+                    script {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        sh 'docker tag msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker push ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker logout'
+                    }
+                }
+            }
+            stage('Run Container') {
+                steps {
+                    script {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        //sh 'docker rm galaxyLab -f'
+                        sh 'docker run -d -p 8080:8080 --name galaxyLab ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker logout'
+                    }
                 }
             }
     }
