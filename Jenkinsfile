@@ -64,11 +64,23 @@ pipeline {
                 steps {
                     script {
                         sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                        //sh 'docker rm galaxyLab -f'
+                        sh 'docker rm galaxyLab -f'
                         sh 'docker run -d -p 8080:8080 --name galaxyLab ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        //sh 'docker run -d -p 8080:8080 ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
                         sh 'docker logout'
                     }
                 }
             }
-    }
+            stage('Test Run Container') {
+                    steps {
+                        script {
+                            sh 'docker ps'
+                            sh 'curl http://192.168.1.61:8080/customers'
+                        }
+                    }
+            }
+        }
 }
+
+//plugins
+//Copy ArtifactVersion
